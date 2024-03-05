@@ -48,14 +48,6 @@ class YandexMapWidget(QWidget):
         """При закрытии формы подчищаем за собой"""
         os.remove(self.map_file)
 
-    def keyPressEvent(self, event):
-        if event.key() == Qt.Key_PageDown:
-            self.size *= 2
-            self.get_image(self.coords, self.size, self.layer)
-        if event.key() == Qt.Key_PageUp:
-            self.size /= 2
-            self.get_image(self.coords, self.size, self.layer)
-
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
