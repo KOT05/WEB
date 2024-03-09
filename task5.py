@@ -30,12 +30,14 @@ class YandexMapWidget(QWidget):
         self.layer_switch_button.setGeometry(50, 50, 150, 30)
         self.layer_switch_button.clicked.connect(self.switch_layer)
 
-        self.wwod = QLineEdit(self)
-        self.wwod.setGeometry(50, 10, 420, 30)
+        self.find_field = QLineEdit(self)
+        self.find_field.setGeometry(50, 10, 420, 30)
+        # self.find_field.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
-        self.wwod_button = QPushButton(self, text='Искать')
-        self.wwod_button.setGeometry(480, 10, 70, 30)
-        self.wwod_button.clicked.connect(self.find_adress)
+        self.find_button = QPushButton(self, text='Искать')
+        self.find_button.setGeometry(480, 10, 70, 30)
+        self.find_button.clicked.connect(self.find_adress)
+        self.find_button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
         self.layers = ["map", "sat", "skl"]
         self.layer_i = 0
@@ -43,9 +45,11 @@ class YandexMapWidget(QWidget):
         self.get_image(self.coords, self.size, self.layers[self.layer_i])
 
     def find_adress(self):
-        map_params = {"geocode": self.wwod.text().lower(),
-                      "apikey": "40d1649f-0493-4b70-98ba-98533de7710b",
-                      "format": "json"}
+        map_params = {
+            "geocode": self.find_field.text().lower(),
+            "apikey": "40d1649f-0493-4b70-98ba-98533de7710b",
+            "format": "json"
+        }
 
         response = requests.get("https://geocode-maps.yandex.ru/1.x", params=map_params)
         response.raise_for_status()
@@ -55,19 +59,24 @@ class YandexMapWidget(QWidget):
             print('Ошибка поиска')
         else:
             lon, lat = found_places[0]['GeoObject']['Point']['pos'].split(" ")
-            self.coords = [lon, lat]
-            self.get_image(self.coords, self.size, self.layers[self.layer_i])
+            self.coords = [float(lon), float(lat)]
+            self.get_image(self.coords, self.size, self.layers[self.layer_i], True)
+        self.find_field.clearFocus()
 
     def switch_layer(self):
         self.layer_i += 1
         self.layer_i %= 3
         self.get_image(self.coords, self.size, self.layers[self.layer_i])
 
-    def get_image(self, coords, size, layer):
+    def get_image(self, coords, size, layer, is_with_mark=False):
         # создание запроса
-        map_params = {"ll": f"{coords[0]},{coords[1]}",
-                      "spn": f"{size},{size}",
-                      "l": layer}
+        map_params = {
+            "ll": f"{coords[0]},{coords[1]}",
+            "spn": f"{size},{size}",
+            "l": layer
+        }
+        if is_with_mark:
+            map_params['pt'] = f"{coords[0]},{coords[1]}"
 
         response = requests.get("http://static-maps.yandex.ru/1.x/", params=map_params)
 
